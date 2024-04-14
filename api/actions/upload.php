@@ -1,76 +1,71 @@
 <?php
+session_start();
 include "../settings/connection.php";
-include '../functions/unique_id_fxn.php';
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header('Content-Type: application/json');
+include '../fxns/unique_id_fxn.php';
 
-// Ensure user is logged in
-if (isset($_COOKIE['user_id'])) {
-    $author_id = $_COOKIE['user_id'];
-} else {
+$allowedOrigin = "http://localhost:8000"; 
+header("Access-Control-Allow-Origin: $allowedOrigin");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-User-Id, X-Full-Name");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+$user_id = $_SERVER['HTTP_X_USER_ID'] ?? null;
+
+// Check if user is authenticated
+if (!$user_id) {
+    http_response_code(401);
     echo json_encode(['error' => 'User not authenticated']);
     exit();
 }
 
+// Validate and process file upload
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['file'])) {
     $title = $_POST['title'] ?? '';
-    $abstract = $_POST['abstract'] ?? '';
-    $author = $_POST['author'] ?? '';
+    $description = $_POST['description'] ?? '';
 
-    $uploadDir = '../uploads/';
+    // Get user ID from header
+    $uploadedBy = $user_id;
+
+    // File details
     $fileName = basename($_FILES['file']['name']);
-    $targetPath = $uploadDir . $fileName;
+    $fileType = $_FILES['file']['type'];
+    $fileTmpName = $_FILES['file']['tmp_name'];
 
-    if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-        $authorIds = []; 
+    // Directory to store uploaded files
+    $uploadDir = '../uploads/';
+    $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+    $rename = unique_id() . '.' . $ext;
+    $targetPath = $uploadDir . $rename;
 
-        $authorNames = explode(',', $author);
-        foreach ($authorNames as $name) {
-            $authorId = 0;
-
-            $sqlGetAuthorId = "SELECT author_id FROM authors WHERE name = ?";
-            $stmt = $conn->prepare($sqlGetAuthorId);
-            $stmt->bind_param('s', $name);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                $authorId = $row['author_id'];
-            } else {
-                $sqlInsertAuthor = "INSERT INTO authors (name) VALUES (?)";
-                $stmt = $conn->prepare($sqlInsertAuthor);
-                $stmt->bind_param('s', $name);
-                if ($stmt->execute()) {
-                    $authorId = $stmt->insert_id;
-                }
-            }
-
-            if ($authorId > 0) {
-                $authorIds[] = $authorId;
-            }
-        }
-
-        $statusApprovalId = 0;
-
-        $sql = "INSERT INTO papers (title, abstract, file_url, author_id, status_approval_id)
+    // Move uploaded file to target directory
+    if (move_uploaded_file($fileTmpName, $targetPath)) {
+        // Insert file details into database
+        $sql = "INSERT INTO files (filename, file_path, uploaded_by, title, description)
                 VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ssssi', $title, $abstract, $targetPath, $author_id, $statusApprovalId);
+        $stmt->bind_param('ssiss', $fileName, $targetPath, $uploadedBy, $title, $description);
 
         if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'File uploaded and record inserted successfully']);
+            $fileId = $stmt->insert_id; 
+            echo json_encode(['success' => true, 'fileId' => $fileId]);
         } else {
-            echo json_encode(['error' => 'Failed to insert record: ' . $conn->error]);
+            // Failed to insert record
+            echo json_encode(['error' => 'Failed to insert file record: ' . $stmt->error]);
         }
     } else {
+        // Failed to move uploaded file
         echo json_encode(['error' => 'Failed to upload file']);
     }
 } else {
+    // Invalid request
     echo json_encode(['error' => 'Invalid request']);
 }
 
+// Close database connection
 $conn->close();
 ?>

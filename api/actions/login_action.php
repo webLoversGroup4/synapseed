@@ -1,15 +1,12 @@
 <?php
-session_start(); // Start the session
-
+session_start(); 
 include "../settings/connection.php";
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header('Content-Type: application/json');
 
-// Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve POST data
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
@@ -19,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Prepare and execute the query to retrieve user information
     $query = "SELECT user_id, fname, lname, password_hash FROM users WHERE email=?";
     $stmt = mysqli_prepare($conn, $query);
 
@@ -45,13 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Verify the password
         if (password_verify($password, $hashedPassword)) {
             // Set session variables
-            $_SESSION["user_id"] = $userId;
-            $_SESSION["full_name"] = $fullName;
-
-            // Generate a secure token
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['full_name'] = $fullName;
             $token = generateToken();
-
-            // Store the token in session or any desired storage
             $_SESSION["token"] = $token;
 
             // Prepare response data
@@ -61,26 +53,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'token' => $token
             ];
 
-            // Send success response with user data
             echo json_encode(['success' => true, 'data' => $userData]);
             exit;
         } else {
-            // Password is incorrect
             http_response_code(401);
             echo json_encode(['error' => 'Invalid credentials']);
+            var_dump($_SESSION);
             exit;
         }
     } else {
-        // No user found with the given email
         http_response_code(401);
         echo json_encode(['error' => 'Invalid credentials']);
         exit;
     }
-
-    // Close the prepared statement
     mysqli_stmt_close($stmt);
 } else {
-    // Request method is not allowed
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
     exit;

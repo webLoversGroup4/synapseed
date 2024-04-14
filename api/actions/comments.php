@@ -1,42 +1,49 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:8000");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json");
-
 include "../settings/connection.php";
-include "../fxns/comments_functions.php";
 
-// Handle incoming requests
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['paper_id'])) {
-        $paper_id = $_GET['paper_id'];
-        $comments = fetchComments($conn, $paper_id);
-        echo json_encode($comments);
-    } else {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing paper_id parameter"]);
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $user_id = $_SESSION["user_id"];
-    $content = $data['content'];
+$allowedOrigin = "http://localhost:8000";
+header("Access-Control-Allow-Origin: $allowedOrigin");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET");
+header("Access-Control-Allow-Headers: Authorization, X-User-Id, X-Full-Name");
 
-    if (empty($paper_id) || empty($user_id) || empty($content)) {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing required parameters"]);
-    } else {
-        if (submitComment($content, $user_id, $paper_id)) {
-            http_response_code(201);
-            echo json_encode(["message" => "Comment submitted successfully"]);
-        } else {
-            http_response_code(500);
-            echo json_encode(["error" => "Failed to submit comment"]);
-        }
-    }
-} else {
-    http_response_code(405);
-    echo json_encode(["error" => "Method not allowed"]);
+$stmt = $conn->prepare("SELECT 
+    r.review_id,
+    r.paper_id,
+    r.reviewer_id,
+    r.rating,
+    r.comments,
+    r.reviewed_at,
+    CONCAT(u.fname, ' ', u.lname) AS reviewer_name,
+    p.title AS paper_title
+FROM 
+    peer_reviews r
+JOIN 
+    users u ON r.reviewer_id = u.user_id
+JOIN 
+    papers p ON r.paper_id = p.paper_id");
+
+
+$stmt->execute();
+
+$result = $stmt->get_result();
+$reviews = [];
+
+while ($row = $result->fetch_assoc()) {
+    $reviews[] = [
+        'review_id' => $row['review_id'],
+        'paper_id' => $row['paper_id'],
+        'reviewer_id' => $row['reviewer_id'],
+        'rating' => $row['rating'],
+        'comments' => $row['comments'],
+        'reviewed_at' => $row['reviewed_at'],
+        'reviewer_name' => $row['reviewer_name'],
+        'paper_title' => $row['paper_title']
+    ];
 }
 
-$mysqli->close();
+echo json_encode($reviews);
+
+$stmt->close();
+$conn->close();
 ?>

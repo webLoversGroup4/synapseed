@@ -8,8 +8,7 @@ header('Content-Type: application/json');
 // SQL query to fetch papers with author's full name
 $sql = "SELECT p.paper_id, p.title, p.abstract, p.file_url, p.author_id, p.created_at, u.fname, u.lname
         FROM papers p
-        JOIN users u ON p.author_id = u.user_id
-        WHERE p.status_approval_id = 1";
+        JOIN users u ON p.author_id = u.user_id";
 
 $result = $conn->query($sql);
 

@@ -1,4 +1,5 @@
 <?php
+session_start();
 include "../settings/connection.php";
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");

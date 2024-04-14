@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 include '../settings/connection.php';
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
@@ -34,6 +34,10 @@ $total_chats = countRowsP($conn, "SELECT * FROM chat_messages");
 $total_papers = countRows($conn, "SELECT * FROM papers WHERE author_id = ?", $tid);
 
 // Count total uploads
+$total_riviews = countRows($conn, "SELECT * FROM peer_reviews WHERE reviewer_id = ?", $tid);
+
+
+// Count total uploads
 $total_uploads = countRows($conn, "SELECT * FROM files WHERE uploaded_by = ?", $tid);
 
 // Count total comments
@@ -45,12 +49,11 @@ $metrics = [
     ['name' => 'Total Papers', 'value' => $total_papers],
     ['name' => 'Total Users', 'value' => $total_users],
     ['name' => 'Total Chats', 'value' => $total_chats],
-    ['name' => 'Total Comments', 'value' => $total_comments]
+    ['name' => 'Total Comments', 'value' => $total_comments],
+    ['name' => 'Total Reviews', 'value' => $total_riviews]
 ];
 
-// Set response content type to JSON
-header('Content-Type: application/json');
 
-// Output the metrics array as JSON
+header('Content-Type: application/json');
 echo json_encode($metrics);
 ?>

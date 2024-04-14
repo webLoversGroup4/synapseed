@@ -31,8 +31,8 @@ function fetchComments($conn, $paper_id) {
         ];
     }
 
-    // Return comments as JSON response
-    echo json_encode($comments);
+    // Return comments as JSON (instead of echoing)
+    return $comments;
 }
 
 
@@ -45,7 +45,5 @@ function submitComment($content, $user_id, $paper_id) {
     $stmt->bind_param("sii", $content, $user_id, $paper_id);
     return $stmt->execute();
 }
-
-
 ?>
 
