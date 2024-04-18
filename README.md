@@ -32,9 +32,12 @@ SynapseED aims to empower researchers, academics, and students by providing a pl
 
 One notable issue encountered during development was the absence of an `index.html` file in every folder, which prevented the successful build of the entire project into a `dist` folder. This impacted website performance due to slower page reloads.
 
+![React + Vite Architecture](architecture.png)
+
 ### Project Architecture
 
-![React + Vite Architecture](architecture.png)
+![React + Vite Architecture](setArch.png)
+
 
 The architecture diagram illustrates the React + Vite frontend setup communicating with the PHP backend via APIs.
 
