@@ -7,6 +7,7 @@ Welcome to SynapseED, an education collaborative platform designed to facilitate
 - **Developer:** Tendai Terrence Machaya
 - **Project:** Final Web Technology
 - **Demo Video:** [Watch Demo Video](https://www.youtube.com/watch?v=zt1mN5SwIvQ)
+- **Link to WebApp** [visit the website](http://16.16.90.16:8000/)
 
 SynapseED aims to empower researchers, academics, and students by providing a platform to share research, collaborate on projects, and connect with like-minded individuals within the research community.
 
