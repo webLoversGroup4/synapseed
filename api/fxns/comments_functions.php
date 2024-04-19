@@ -1,5 +1,5 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:8000");
+header("Access-Control-Allow-Origin: http://16.16.90.16:8000");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
