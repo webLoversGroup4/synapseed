@@ -3,7 +3,7 @@ session_start();
 
 include '../settings/connection.php';
 
-$allowedOrigin = "http://localhost:8000"; 
+$allowedOrigin = "http://16.16.90.16:8000"; 
 header("Access-Control-Allow-Origin: $allowedOrigin");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
